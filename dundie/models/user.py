@@ -1,7 +1,7 @@
 """User related data models"""
 from typing import Optional
 from sqlmodel import Field, SQLModel
-
+from dundie.security  import HashedPassword
 
 class User(SQLModel, table=True):
     """Represents the User Model"""
@@ -11,7 +11,7 @@ class User(SQLModel, table=True):
     username: str = Field(unique=True, nullable=False)
     avatar: Optional[str] = None
     bio: Optional[str] = None
-    password: str = Field(nullable=False)
+    password: HashedPassword
     name: str = Field(nullable=False)
     dept: str = Field(nullable=False)
     currency: str = Field(nullable=False)
@@ -20,3 +20,12 @@ class User(SQLModel, table=True):
     def superuser(self):
         """Users belonging to management dept are admins"""
         return self.dept == "management"
+
+
+def generate_username(name: str) -> str:
+    """Generate a slug from user.name.
+    "Bruno Rocha" -> "bruno-rocha"
+    "MIchal Scott" -> "mmichal-scott"
+    # TODO: library slugify
+    """
+    return name.lower().replace(" ", "-")
