@@ -1,7 +1,11 @@
 """User related data models"""
+from locale import currency
 from typing import Optional
+from unittest.mock import Base
 from sqlmodel import Field, SQLModel
 from dundie.security  import HashedPassword
+from pydantic import BaseModel, root_validator
+
 
 class User(SQLModel, table=True):
     """Represents the User Model"""
@@ -29,3 +33,32 @@ def generate_username(name: str) -> str:
     # TODO: library slugify
     """
     return name.lower().replace(" ", "-")
+
+
+class UserResponse(BaseModel):
+    """Serializer for when we send a response  to the client"""
+    name: str
+    username: str
+    dept: str
+    avatar: Optional[str] = None
+    bio: Optional[str] = None
+    currency: str
+
+
+class UserRequest(BaseModel):
+    "Deserializer for when we get the user  data from the client."
+    name: str
+    email: str
+    dept: str
+    password: str
+    username: Optional[str] = None
+    avatar: Optional[str] = None
+    bio: Optional[str] = None
+    currency: str = "USD"
+
+    @root_validator(pre=True)
+    def generate_username_if_not_set(cls, values):
+        """Generates  username"""
+        if values.get("username") is None:
+            values["username"] = generate_username(values["name"])
+        return values
