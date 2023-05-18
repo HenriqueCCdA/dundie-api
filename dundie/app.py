@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from dundie.routes.user import router as user_router
+from dundie.routes import main_router
 
 
 app = FastAPI(
@@ -8,4 +8,4 @@ app = FastAPI(
     description="dundie is a rewards API",
 )
 
-app.include_router(user_router, prefix="/user", tags=["user"])
+app.include_router(main_router)
