@@ -12,7 +12,6 @@ settings = Dynaconf(
     environments=["development", "production", "testing"],
     env_switcher="dundie_env",
     load_dotenv=False,
-
 )
 
 settings.validators.register(

@@ -3,7 +3,7 @@ from locale import currency
 from typing import Optional
 from unittest.mock import Base
 from sqlmodel import Field, SQLModel
-from dundie.security  import HashedPassword
+from dundie.security import HashedPassword
 from pydantic import BaseModel, root_validator
 
 
@@ -37,6 +37,7 @@ def generate_username(name: str) -> str:
 
 class UserResponse(BaseModel):
     """Serializer for when we send a response  to the client"""
+
     name: str
     username: str
     dept: str

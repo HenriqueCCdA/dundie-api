@@ -27,10 +27,11 @@ async def session_login(username: str, password: str):
     allow = (username, password) == USER_CORRECT
     if allow is False:
         raise HTTPException(status_code=401)
-    response = RedirectResponse("/",  status_code=302)
+    response = RedirectResponse("/", status_code=302)
     response.set_cookie(key="Authorization", value=RANDOM_SESSION_ID)
     SESSION_DB[RANDOM_SESSION_ID] = username
     return response
+
 
 @app.post("/logout")
 async def session_logout(response: Response):
@@ -49,6 +50,6 @@ def get_auth_user(request: Request):
     return True
 
 
-@app.get("/",  dependencies=[Depends(get_auth_user)])
+@app.get("/", dependencies=[Depends(get_auth_user)])
 async def secret():
     return {"secret": "info"}

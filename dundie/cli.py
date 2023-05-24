@@ -27,9 +27,7 @@ def shell():
     try:
         from IPython import start_ipython
 
-        start_ipython(
-            argv=["--ipython-dir=/tmp", "--no-banner"], user_ns=_vars
-        )
+        start_ipython(argv=["--ipython-dir=/tmp", "--no-banner"], user_ns=_vars)
     except ImportError:
         import code
 

@@ -13,13 +13,13 @@ async def list_users(*, session: Session = ActiveSession):
     users = session.exec(select(User)).all()
     return users
 
+
 @router.get("/{username}/", response_model=UserResponse)
 async def get_user_by_username(*, session: Session = ActiveSession, username: str):
     """Get single usser by username"""
     query = select(User).where(User.username == username)
     user = session.exec(query).first()
     return user
-
 
 
 @router.post("/", response_model=UserResponse, status_code=201)
