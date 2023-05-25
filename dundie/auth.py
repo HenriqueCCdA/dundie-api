@@ -85,7 +85,7 @@ def get_user(username: str) -> Optional[User]:
 
 
 def get_current_user(
-    token: str,
+    token: str = Depends(oauth2_scheme),
     request: Request = None,
     fresh=False,
 ) -> User:
@@ -135,6 +135,21 @@ async def get_current_active_user(
     return current_user
 
 AuthenticateUser = Depends(get_current_active_user)
+
+
+async def get_current_super_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Wraps the sync get_active_user for sync calls for superuser"""
+    if not current_user.superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not a super user"
+        )
+    return current_user
+
+
+SuperUser = Depends(get_current_super_user)
 
 
 async def validate_token(token: str = Depends(oauth2_scheme)) -> User:

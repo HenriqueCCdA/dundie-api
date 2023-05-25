@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from sqlmodel import Session, select
 from dundie.models.user import User, UserResponse, UserRequest
 from dundie.db import ActiveSession
+from dundie.auth import AuthenticateUser, SuperUser
 
 
 router = APIRouter()
@@ -22,7 +23,7 @@ async def get_user_by_username(*, session: Session = ActiveSession, username: st
     return user
 
 
-@router.post("/", response_model=UserResponse, status_code=201)
+@router.post("/", response_model=UserResponse, status_code=201, dependencies=[SuperUser])
 async def create_user(*, session: Session = ActiveSession, user: UserRequest):
     """Creates a new user"""
     db_user = User.from_orm(user)
