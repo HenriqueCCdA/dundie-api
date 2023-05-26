@@ -103,11 +103,7 @@ def get_current_user(
                 raise credential_exception
 
     try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
 
         if username is None:
@@ -126,13 +122,16 @@ def get_current_user(
 
     return user
 
+
 # FastAPI dependencies
+
 
 async def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Wraps the sync get_active_user for sync call"""
     return current_user
+
 
 AuthenticateUser = Depends(get_current_active_user)
 
@@ -142,10 +141,7 @@ async def get_current_super_user(
 ) -> User:
     """Wraps the sync get_active_user for sync calls for superuser"""
     if not current_user.superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not a super user"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a super user")
     return current_user
 
 
