@@ -1,7 +1,6 @@
 """User related data models"""
-from locale import currency
 from typing import Optional
-from unittest.mock import Base
+from fastapi import HTTPException
 from sqlmodel import Field, SQLModel
 from dundie.security import HashedPassword
 from pydantic import BaseModel, root_validator
@@ -36,7 +35,7 @@ def generate_username(name: str) -> str:
 
 
 class UserResponse(BaseModel):
-    """Serializer for when we send a response  to the client"""
+    """Serializer for when we send a response to the client"""
 
     name: str
     username: str
@@ -47,7 +46,7 @@ class UserResponse(BaseModel):
 
 
 class UserRequest(BaseModel):
-    "Deserializer for when we get the user  data from the client."
+    "Deserializer for when we get the user data from the client."
     name: str
     email: str
     dept: str
@@ -62,4 +61,18 @@ class UserRequest(BaseModel):
         """Generates  username"""
         if values.get("username") is None:
             values["username"] = generate_username(values["name"])
+        return values
+
+
+class UserProfilePatchRequest(BaseModel):
+    "Deserializer for when client wants to partially update user."
+
+    avatar: Optional[str] = None
+    bio: Optional[str] = None
+
+    @root_validator(pre=True)
+    def ensure_validate(cls, values):
+        if not values:
+            raise HTTPException(status_code=400, detail="Bad request, no data informed")
+
         return values
