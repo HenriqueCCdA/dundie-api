@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from sqlmodel import Session, select
-from dundie.models.user import User, UserResponse, UserRequest, UserProfilePatchRequest
+from dundie.models.user import User, UserPasswordPatchRequest, UserResponse, UserRequest, UserProfilePatchRequest
 from dundie.db import ActiveSession
-from dundie.auth import AuthenticateUser, SuperUser
+from dundie.auth import AuthenticateUser, CanChangeUserPassword, SuperUser
 from sqlalchemy.exc import IntegrityError
 
 
@@ -68,6 +68,20 @@ async def update_user(
     if patch_data.bio is not None:
         user.bio = patch_data.bio
 
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
+@router.post("/{username}/password/", response_model=UserResponse)
+async def change_password(
+    *,
+    session: Session = ActiveSession,
+    patch_data: UserPasswordPatchRequest,
+    user: User = CanChangeUserPassword,
+):
+    user.password = patch_data.hashed_password
     session.add(user)
     session.commit()
     session.refresh(user)

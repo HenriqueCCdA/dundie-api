@@ -152,3 +152,44 @@ async def validate_token(token: str = Depends(oauth2_scheme)) -> User:
     """Validates useer token"""
     user = get_current_user(token=token)
     return user
+
+
+async def get_user_if_change_password_is_allowed(
+    *,
+    request: Request,
+    pwd_reset_token: Optional[str] = None, # from path?pwd_reset_token=xxxx
+    username: str, # from /path/{username}
+) -> User:
+    """Returns User if one of the conditions is met.
+    1. There is a pwd_reset_token passed as query parameter and it is valid OR
+    2. authenticated_user is superuser OR
+    3. authenticated_user is User
+    """
+    target_user = get_user(username) # The user we wnat to change the password
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    try:
+        valid_pwd_reset_token = get_current_user(token=pwd_reset_token or "") == target_user
+    except HTTPException:
+        valid_pwd_reset_token = False
+
+    try:
+        authenticate_user = get_current_user(token="", request=request)
+    except HTTPException:
+        authenticate_user = None
+
+    if any(
+        [
+            valid_pwd_reset_token,
+            authenticate_user and authenticate_user.superuser,
+            authenticate_user and authenticate_user.id == target_user.id,
+        ]
+    ):
+        return target_user
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="You are not allowed to change this user's password",
+    )
+
+CanChangeUserPassword = Depends(get_user_if_change_password_is_allowed)
