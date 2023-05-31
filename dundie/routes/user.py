@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, BackgroundTasks
 from sqlmodel import Session, select
 from dundie.models.user import User, UserPasswordPatchRequest, UserResponse, UserRequest, UserProfilePatchRequest
 from dundie.db import ActiveSession
@@ -90,9 +90,13 @@ async def change_password(
 
 
 @router.post("/pwd_reset_token")
-async def send_password_reset_token(*, email: str = Body(embed=True)):
+async def send_password_reset_token(
+    *,
+    email: str = Body(embed=True),
+    background_tasks: BackgroundTasks,
+):
     """Sends an email with the token to reset passwod."""
-    try_to_send_pwd_reset_email(email)
+    background_tasks.add_task(try_to_send_pwd_reset_email, email=email)
     return {
         "messsage": "If we found a user with email, we sent a password reset token to it."
     }
