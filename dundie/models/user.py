@@ -26,8 +26,8 @@ class User(SQLModel, table=True):
 
     # Populates a ".user" on 'Transaction'
     incomes: Optional[list["Transaction"]] = Relationship(
-        back_populates="from_user",
-        sa_relationship_kwargs={"primaryjoin": "User.id == Transaction.from_id"},
+        back_populates="user",
+        sa_relationship_kwargs={"primaryjoin": 'User.id == Transaction.user_id'},
     )
 
     # Populates a '.from_user' on `Transaction``
@@ -42,6 +42,7 @@ class User(SQLModel, table=True):
         sa_relationship_kwargs={"lazy": "dynamic"}
     )
 
+    @property
     def balance(self) -> int:
         """Returns the current balance of the user"""
         if (user_balance  := self._balance.first()) is not None:
