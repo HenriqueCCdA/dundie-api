@@ -76,6 +76,16 @@ class UserResponse(BaseModel):
     currency: str
 
 
+class UserResponseWithBalance(UserResponse):
+    balance: Optional[int] = None
+
+    @root_validator(pre=True)
+    def set_balance(cls, values):
+        instance = values["_sa_instance_state"].object
+        values["balance"] = instance.balance
+        return values
+
+
 class UserRequest(BaseModel):
     "Deserializer for when we get the user data from the client."
     name: str

@@ -1,27 +1,71 @@
 from fastapi import APIRouter, HTTPException, Body, BackgroundTasks
 from sqlmodel import Session, select
-from dundie.models.user import User, UserPasswordPatchRequest, UserResponse, UserRequest, UserProfilePatchRequest
+from dundie.models.user import (
+    User,
+    UserResponse,
+    UserResponseWithBalance,
+    UserPasswordPatchRequest,
+    UserRequest,
+    UserProfilePatchRequest,
+)
 from dundie.db import ActiveSession
 from dundie.auth import AuthenticateUser, CanChangeUserPassword, SuperUser
 from sqlalchemy.exc import IntegrityError
 from dundie.tasks.user import try_to_send_pwd_reset_email
 
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from pydantic import parse_obj_as
+from dundie.auth import ShowBalanceField
+
 
 router = APIRouter()
 
 
-@router.get("/", response_model=list[UserResponse])
-async def list_users(*, session: Session = ActiveSession):
+@router.get(
+    "/",
+    response_model=list[UserResponse] | list[UserResponseWithBalance],
+    response_model_exclude_unset=True,
+)
+async def list_users(
+    *,
+    session: Session = ActiveSession,
+    show_balance_field: bool = ShowBalanceField,
+):
     """List all users from database"""
     users = session.exec(select(User)).all()
+    # TODO pagination
+    print(show_balance_field)
+
+    if show_balance_field:
+        users_with_balance = parse_obj_as(list[UserResponseWithBalance], users)
+        return JSONResponse(jsonable_encoder(users_with_balance))
+
     return users
 
 
-@router.get("/{username}/", response_model=UserResponse)
-async def get_user_by_username(*, session: Session = ActiveSession, username: str):
+@router.get(
+    "/{username}/",
+    response_model=UserResponse | UserResponseWithBalance,
+    response_model_exclude_unset=True,
+)
+async def get_user_by_username(
+    *,
+    session: Session = ActiveSession,
+    show_balance_field: bool = ShowBalanceField,
+    username: str
+):
     """Get single usser by username"""
     query = select(User).where(User.username == username)
     user = session.exec(query).first()
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User Not Found")
+
+    if show_balance_field:
+        user_with_balance = parse_obj_as(UserResponseWithBalance, user)
+        return JSONResponse(jsonable_encoder(user_with_balance))
+
     return user
 
 

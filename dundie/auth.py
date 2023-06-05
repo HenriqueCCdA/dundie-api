@@ -1,3 +1,4 @@
+from ast import And
 from fastapi import Depends, HTTPException, Request, status
 from jose import JWTError, jwt
 from datetime import timedelta, datetime
@@ -193,3 +194,38 @@ async def get_user_if_change_password_is_allowed(
     )
 
 CanChangeUserPassword = Depends(get_user_if_change_password_is_allowed)
+
+
+async def show_balance_field(
+    *,
+    request: Request,
+    show_balance: Optional[bool] = False, # from /user/?show_balance=True
+) -> bool:
+    """Returns True if onee of the condittions in met.
+    1. show_balance is True And
+    2. authenticated_user.superuser OR
+    3. authenticated_user.username == username
+    """
+
+    if not show_balance:
+        return False
+
+    username = request.path_params.get("username")
+
+    try:
+        authenticate_user = get_current_user(token="", request=request)
+    except HTTPException:
+        authenticate_user = None
+
+    if any(
+        [
+            authenticate_user and authenticate_user.superuser,
+            authenticate_user and  authenticate_user.username == username,
+        ]
+    ):
+        return True
+
+    return False
+
+
+ShowBalanceField = Depends(show_balance_field)
